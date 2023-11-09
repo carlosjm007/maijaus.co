@@ -2,7 +2,7 @@
 // // import styles from './MapContent.module.scss';
 // import Map from '@components/Map';
 
-const MapMouse = ({ popupInfo, setPopupInfo }) => {
+const MapMouse = ({ popupInfo, setPopupInfo, setIntructivePopup }) => {
 
     const setPopupInfoVisible = (visible) => {
         setPopupInfo({
@@ -14,6 +14,7 @@ const MapMouse = ({ popupInfo, setPopupInfo }) => {
     const rectangleEvents = (lat, lng, steps, mean)=>{
         return ({
             mouseover: (e) => {
+                setIntructivePopup(false);
                 setPopupInfo({
                     visible: true,
                     center: [lat + steps.lat/2, lng + steps.lng/2],

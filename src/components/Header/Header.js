@@ -1,16 +1,10 @@
-import Link from 'next/link';
-
 import styles from './Header.module.scss';
 
 const Header = () => {
   return (
     <header className={styles.header}>
       <div className={styles.headerContainer}>
-        <p className={styles.headerTitle}>
-          <Link href="/">
-            Maijaus - Villavicencio
-          </Link>
-        </p>
+        <h1 className={styles.headerTitle}>maijaus.co - Villavicencio</h1>
       </div>
     </header>
   );
