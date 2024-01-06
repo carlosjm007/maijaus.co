@@ -1,0 +1,12 @@
+{
+    "minLat": 7.0557,
+    "maxLat": 7.1620,
+    "minLng": -73.1528,
+    "maxLng": -73.0737,
+    "step": 45,
+    "zoom": 13,
+    "center": [7.1035, -73.1131],
+    "lowQuantile": 0.1,
+    "highQuantile": 0.9,
+    "name": "Bucaramanga"
+}

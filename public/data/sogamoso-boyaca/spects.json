@@ -1,0 +1,12 @@
+{
+    "minLat": 5.68908,
+    "maxLat": 5.75228,
+    "minLng": -72.96273,
+    "maxLng": -72.89780,
+    "step": 25,
+    "zoom": 14,
+    "center": [5.71975, -72.9278],
+    "lowQuantile": 0.0,
+    "highQuantile": 1,
+    "name": "Sogamoso"
+}

@@ -1,17 +1,10 @@
 import Head from 'next/head'
-// import Image from 'next/image'
-// import { Inter } from 'next/font/google'
-// import styles from '@/styles/Home.module.css';
+import styles from '@/styles/Home.module.css';
 import Map from '@components/Map';
 import Layout from '@components/Layout';
-// import arriendo from '../data/arriendo.json';
-import venta from '../data/venta.json';
 import React, { useState, useEffect, useRef } from 'react';
-// import dynamic from 'next/dynamic';
 
-// const MapContent = dynamic(() => import('@components/MapContent'), {
-//   ssr: false
-// });
+const SPECTS_LOCATION_LINK = "https://maijaus.z20.web.core.windows.net";
 
 Number.prototype.toFixedDown = function(digits) {
   const expDigits = Math.pow(10, digits);
@@ -20,16 +13,23 @@ Number.prototype.toFixedDown = function(digits) {
 };
 
 export async function getStaticProps({params}) {
+  const CITY = params.slug?.[0] || "villavicencio";
+  let res = await fetch(`${SPECTS_LOCATION_LINK}/${CITY}/venta.json`);
+  const venta = await res.json();
+  res = await fetch(`${SPECTS_LOCATION_LINK}/${CITY}/spects.json`);
+  const spects = await res.json();
+
+
   const AREA_SELECTED = {
-    minLat: 4.09372,
-    maxLat: 4.17316,
-    minLng: -73.6877,
-    maxLng: -73.57406,
+    minLat: spects.minLat,
+    maxLat: spects.maxLat,
+    minLng: spects.minLng,
+    maxLng: spects.maxLng,
   };
 
   const STEPS = {
-    lat: (AREA_SELECTED.maxLat - AREA_SELECTED.minLat) / 70,
-    lng: (AREA_SELECTED.maxLng - AREA_SELECTED.minLng) / 70,
+    lat: (AREA_SELECTED.maxLat - AREA_SELECTED.minLat) / spects.step,
+    lng: (AREA_SELECTED.maxLng - AREA_SELECTED.minLng) / spects.step,
   };
 
   const dataVenta = venta.filter((item) => {
@@ -118,8 +118,8 @@ export async function getStaticProps({params}) {
   let minPrice = matriz_final.reduce((min, p) => p.c < min ? p.c : min, matriz_final[0].c);
   console.log("maxPrice", maxPrice, "minPrice", minPrice);
 
-  const M = 0.8/(maxPrice - minPrice);
-  const B = 0.1 - (0.8/(maxPrice - minPrice)*minPrice);
+  const M = spects.highQuantile/(maxPrice - minPrice);
+  const B = spects.lowQuantile - (spects.highQuantile/(maxPrice - minPrice)*minPrice);
   matriz_final = matriz_final.map((item) => {
     const normalized = M*item.c + B;
     return {
@@ -140,10 +140,12 @@ export async function getStaticProps({params}) {
         maxLat,
         minLat
       },
-      center: [4.1333, -73.6327],
-      zoom: 14,
+      center: spects.center,
+      zoom: spects.zoom,
       matriz_final,
       steps: STEPS,
+      name: spects.name,
+      propertiesCount: venta.length,
     }
   }
 }
@@ -160,14 +162,22 @@ export async function getStaticPaths() {
         slug: ["villavicencio"],
       },
     },
+    {
+      params: {
+        slug: ["sogamoso-boyaca"],
+      },
+    },
+    {
+      params: {
+        slug: ["bucaramanga-santander"],
+      },
+    },
   ];
   // console.log("getStaticPaths", paths);
   return {paths, fallback: false};
 }
 
-const Home = ({venta, center, matriz_final, steps, zoom}) => {
-  // const {maxLng, minLng, maxLat, minLat} = venta;
-  // console.log("Home", venta, center, matriz_final, steps);
+const Home = ({venta, center, matriz_final, steps, zoom, name, propertiesCount}) => {
 
   const markerRef = useRef(null);
   const [popupInfo, setPopupInfo] = useState({
@@ -218,25 +228,23 @@ const Home = ({venta, center, matriz_final, steps, zoom}) => {
   }, []);
 
   return (
-    <Layout>
+    <Layout name={name}>
       <Head>
-        <title>Visualiza los Costos por Metro Cuadrado en Tiempo Real</title>
-        <meta name="description" content="Descubre el panorama inmobiliario de Villavo con nuestro mapa interactivo. Visualiza de manera sencilla y clara los precios del metro cuadrado en cada zona." />
-        <meta name="og:title" property="og:title" content="Visualiza los Costos por Metro Cuadrado en Tiempo Real"></meta>
+        <title>{name} - Visualiza los Costos por Metro Cuadrado en Tiempo Real</title>
+        <meta name="description" content={`Descubre el panorama inmobiliario de ${name} con nuestro mapa interactivo. Visualiza de manera sencilla y clara los precios del metro cuadrado en cada zona.`} />
+        <meta name="og:title" property="og:title" content={`${name} - Ver su mapa inmoviliario`}></meta>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="twitter:card" content="Visualiza los Costos por Metro Cuadrado en Tiempo Real"></meta>
+        <meta name="twitter:card" content={`${name} - Ver su mapa inmoviliario`}></meta>
         <meta name='robots' content='index, follow' />
         <meta name="twitter:site" content="@carlosjm5" />
         <meta name="twitter:creator" content="@carlosjm5" />
         <meta property="og:url" content="https://maijaus.co" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="Visualiza los Costos por Metro Cuadrado en Tiempo Real" />
-        <meta property="og:description" content="Descubre el panorama inmobiliario de Villavo con nuestro mapa interactivo. Visualiza de manera sencilla y clara los precios del metro cuadrado en cada zona." />
+        <meta property="og:title" content={`${name} - Ver su mapa inmoviliario`} />
+        <meta property="og:description" content={`Descubre el panorama inmobiliario de ${name} con nuestro mapa interactivo. Visualiza de manera sencilla y clara los precios del metro cuadrado en cada zona.`} />
         <meta property="og:image" content="https://maijaus.co/og-image.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-
-        <link rel="icon" href="/favicon.ico" />
 
         <link rel="preconnect" href="https://c.tile.openstreetmap.org"/>
         <link rel="dns-prefetch" href="https://c.tile.openstreetmap.org" />
@@ -326,7 +334,6 @@ const Home = ({venta, center, matriz_final, steps, zoom}) => {
                 <Marker position={markerCenter.center} ref={markerRef}>
                     <Popup>
                         <p>Arrastra el mapa hacia una<br/>zona roja de interés</p>
-                        <p>Así conocerás su precio<br/>promedio del metro cuadrado</p>
                     </Popup>
                 </Marker>)
             }
@@ -339,6 +346,11 @@ const Home = ({venta, center, matriz_final, steps, zoom}) => {
           </>
         )}
       </Map>
+      <div className={styles.infoCard}>
+        <h1>Visualiza los Costos por Metro Cuadrado</h1>
+        <p>Fueron analizadas cerca de {propertiesCount} propiedades en {name}.</p>
+        <p>¿Quieres ver otras ciudades? Dejanos un comentario <a href='https://www.facebook.com/permalink.php?story_fbid=pfbid02Udir23WrjrPquw1FG4WTKeJruat7svMNAvzCx9sLFDNRSJ5WWNu39Z6NRPWXS3YPl&id=61553905606457' target="_blank"><strong>aquí</strong></a>.</p>
+      </div>
     </Layout>
   )
 }

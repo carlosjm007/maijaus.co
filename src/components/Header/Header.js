@@ -1,10 +1,10 @@
 import styles from './Header.module.scss';
 
-const Header = () => {
+const Header = ({name}) => {
   return (
     <header className={styles.header}>
       <div className={styles.headerContainer}>
-        <h1 className={styles.headerTitle}>maijaus.co - Villavicencio</h1>
+        <h1 className={styles.headerTitle}>maijaus.co - {name}</h1>
       </div>
     </header>
   );

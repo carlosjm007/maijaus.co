@@ -1,0 +1,12 @@
+{
+    "minLat": 4.09372,
+    "maxLat": 4.17316,
+    "minLng": -73.6877,
+    "maxLng": -73.57406,
+    "step": 70,
+    "zoom": 14,
+    "center": [4.1333, -73.6327],
+    "lowQuantile": 0.1,
+    "highQuantile": 0.8,
+    "name": "Villavicencio"
+}
