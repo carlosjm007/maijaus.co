@@ -146,6 +146,7 @@ export async function getStaticProps({params}) {
       steps: STEPS,
       name: spects.name,
       propertiesCount: venta.length,
+      ogImage: spects?.ogImage ? `${SPECTS_LOCATION_LINK}/${CITY}/${spects?.ogImage}` : null,
     }
   }
 }
@@ -177,7 +178,7 @@ export async function getStaticPaths() {
   return {paths, fallback: false};
 }
 
-const Home = ({venta, center, matriz_final, steps, zoom, name, propertiesCount}) => {
+const Home = ({venta, center, matriz_final, steps, zoom, name, propertiesCount, ogImage}) => {
 
   const markerRef = useRef(null);
   const [popupInfo, setPopupInfo] = useState({
@@ -232,17 +233,17 @@ const Home = ({venta, center, matriz_final, steps, zoom, name, propertiesCount})
       <Head>
         <title>{name} - Visualiza los Costos por Metro Cuadrado en Tiempo Real</title>
         <meta name="description" content={`Descubre el panorama inmobiliario de ${name} con nuestro mapa interactivo. Visualiza de manera sencilla y clara los precios del metro cuadrado en cada zona.`} />
-        <meta name="og:title" property="og:title" content={`${name} - Ver su mapa inmoviliario`}></meta>
+        <meta name="og:title" property="og:title" content={`${name} - Vea su mapa inmoviliario`}></meta>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="twitter:card" content={`${name} - Ver su mapa inmoviliario`}></meta>
+        <meta name="twitter:card" content={`${name} - Vea su mapa inmoviliario`}></meta>
         <meta name='robots' content='index, follow' />
         <meta name="twitter:site" content="@carlosjm5" />
         <meta name="twitter:creator" content="@carlosjm5" />
         <meta property="og:url" content="https://maijaus.co" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content={`${name} - Ver su mapa inmoviliario`} />
+        <meta property="og:title" content={`${name} - Vea su mapa inmoviliario`} />
         <meta property="og:description" content={`Descubre el panorama inmobiliario de ${name} con nuestro mapa interactivo. Visualiza de manera sencilla y clara los precios del metro cuadrado en cada zona.`} />
-        <meta property="og:image" content="https://maijaus.co/og-image.png" />
+        <meta property="og:image" content={ogImage || "https://maijaus.co/og-image.png"} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
 
@@ -253,7 +254,7 @@ const Home = ({venta, center, matriz_final, steps, zoom, name, propertiesCount})
         <link rel="preconnect" href="https://a.tile.openstreetmap.org" />
         <link rel="dns-prefetch" href="https://a.tile.openstreetmap.org" />
 
-
+        {/* 
         <link rel="preload" as="image" href="https://c.tile.openstreetmap.org/14/4843/8002.png" />
         <link rel="preload" as="image" href="https://b.tile.openstreetmap.org/14/4839/8002.png" />
         <link rel="preload" as="image" href="https://a.tile.openstreetmap.org/14/4841/8002.png" />
@@ -301,6 +302,7 @@ const Home = ({venta, center, matriz_final, steps, zoom, name, propertiesCount})
         <link rel="preload" as="image" href="https://a.tile.openstreetmap.org/13/2420/4003.png" />
         <link rel="preload" as="image" href="https://c.tile.openstreetmap.org/13/2419/4003.png" />
         <link rel="preload" as="image" href="https://b.tile.openstreetmap.org/13/2421/4003.png" />
+        */}
         <link rel="preload" as="image" href="https://maijaus.co/marker-icon-2x.png" />
         <link rel="preload" as="image" href="https://maijaus.co/marker-shadow.png" />
         
