@@ -120,16 +120,16 @@ export const mergeArriendoIntoVentas = (matriz_final_venta, matriz_final_arriend
         const arriendo = matriz_final_arriendo.find((item2) => item2.l[0] === item.l[0] && item2.l[1] === item.l[1]);
         if(!arriendo) return {
             ...item,
-            mean: (item.mean/1000000).toFixedDown(1),       //En millones
+            mean: item.mean,
             c: item.c,
             arriendo: null
         };
         arriendo.done = true;        
         return {
             ...item,
-            mean: (item.mean/1000000).toFixedDown(1),       //En millones
+            mean: item.mean,
             c: item.c,
-            arriendo: (arriendo.mean/1000).toFixedDown(0),  //En miles
+            arriendo: arriendo.mean,
         }
     });
     matriz_final_arriendo.forEach((item) => {
@@ -137,8 +137,19 @@ export const mergeArriendoIntoVentas = (matriz_final_venta, matriz_final_arriend
         matriz_final.push({
             l: item.l,
             c: 0,
-            arriendo: (item.mean/1000).toFixedDown(0),  //En miles
+            arriendo: item.mean,  //En miles
         });
     });
     return matriz_final;
+}
+
+export const fixMoneyMount = (matriz) => {
+    return matriz.map((item) => {
+        return {
+            ...item,
+            mean: (item.mean/1000000).toFixedDown(1),       //En millones
+            c: item.c,
+            arriendo: item.arriendo ? (item.arriendo/1000).toFixedDown(0) : null,  //En miles
+        }
+    });
 }

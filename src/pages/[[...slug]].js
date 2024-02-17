@@ -18,6 +18,8 @@ export async function getStaticProps({params}) {
   const spects = await getFile(`${SPECTS_LOCATION_LINK}/${CITY}/spects.json`);
   let arriendo = null;
 
+  const cities = await getFile(`${SPECTS_LOCATION_LINK}/cities.json`);
+  
   if(spects?.hasRent){
     arriendo = await getFile(`${SPECTS_LOCATION_LINK}/${CITY}/arriendo.json`);
   }
@@ -35,7 +37,7 @@ export async function getStaticProps({params}) {
   };
 
   // import dinamically dataToGridMap
-  const { dataToGridMap, mergeArriendoIntoVentas } = await import('@/process/dataToGridMap');
+  const { dataToGridMap, mergeArriendoIntoVentas, fixMoneyMount } = await import('@/process/dataToGridMap');
   
   const {
     matriz_final: matriz_final_venta, 
@@ -65,10 +67,7 @@ export async function getStaticProps({params}) {
     matriz_final: matriz_final_arriendo
   } = getDataArriendo();
 
-
-  const matriz_final = getMergedData(matriz_final_venta, matriz_final_arriendo);
-
-  console.log("matriz_final", matriz_final);
+  const matriz_final = fixMoneyMount(getMergedData(matriz_final_venta, matriz_final_arriendo));
 
   return {
     props: {
@@ -83,38 +82,34 @@ export async function getStaticProps({params}) {
       name: spects.name,
       propertiesCount: venta.length,
       ogImage: spects?.ogImage ? `${SPECTS_LOCATION_LINK}/${CITY}/${spects?.ogImage}` : null,
+      allCities: cities?.cities
     }
   }
 }
 
 export async function getStaticPaths() {
+  const cities = await getFile(`${SPECTS_LOCATION_LINK}/cities.json`);
+  const citiesPaths = cities?.cities?.map((city) => {
+    return {
+      params: {
+        slug: [city.url],
+      },
+    };
+  });
+
   let paths = [
     {
       params: {
         slug: [],
       },
     },
-    {
-      params: {
-        slug: ["villavicencio"],
-      },
-    },
-    {
-      params: {
-        slug: ["sogamoso-boyaca"],
-      },
-    },
-    {
-      params: {
-        slug: ["bucaramanga-santander"],
-      },
-    },
+    ...citiesPaths,
   ];
   // console.log("getStaticPaths", paths);
   return {paths, fallback: false};
 }
 
-const Home = ({center, matriz_final, steps, zoom, name, propertiesCount, ogImage}) => {
+const Home = ({center, matriz_final, steps, zoom, name, propertiesCount, ogImage, allCities }) => {
 
   const markerRef = useRef(null);
   const [popupInfo, setPopupInfo] = useState({
@@ -157,6 +152,7 @@ const Home = ({center, matriz_final, steps, zoom, name, propertiesCount, ogImage
       return;
     }
     loadMouseBehavior();
+
   }
 
 
@@ -300,7 +296,22 @@ const Home = ({center, matriz_final, steps, zoom, name, propertiesCount, ogImage
       <div className={styles.infoCard}>
         <h1>Visualiza los Costos por Metro Cuadrado</h1>
         <p>Fueron analizadas cerca de {propertiesCount} propiedades en {name}.</p>
-        <p>¿Quieres ver otras ciudades? Dejanos un comentario <a href='https://www.facebook.com/permalink.php?story_fbid=pfbid02Udir23WrjrPquw1FG4WTKeJruat7svMNAvzCx9sLFDNRSJ5WWNu39Z6NRPWXS3YPl&id=61553905606457' target="_blank"><strong>aquí</strong></a>.</p>
+        <div className={styles.citySelector}>
+          <label>Mira otras ciudades: </label>
+          <select
+            onChange={(e) => {
+              const city = e.target.value;
+              window.location.href = `/${city}`;
+            }}
+          >
+            {allCities.map((city, index) => {
+              return (
+                <option key={index} value={city.url} selected={name === city.name}>{city.name}</option>
+              )
+            })}
+          </select>
+        </div>
+        <p>¿No encuentras tu ciudad? Dejanos un comentario <a href='https://www.facebook.com/permalink.php?story_fbid=pfbid02Udir23WrjrPquw1FG4WTKeJruat7svMNAvzCx9sLFDNRSJ5WWNu39Z6NRPWXS3YPl&id=61553905606457' target="_blank"><strong>aquí</strong></a> con tu ciudad y pronto la tendremos.</p>
       </div>
     </Layout>
   )

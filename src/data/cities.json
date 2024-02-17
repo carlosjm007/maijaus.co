@@ -1,0 +1,16 @@
+{
+    "cities": [
+        {
+            "name": "Villavicencio",
+            "url": "villavicencio"
+        },
+        {
+            "name": "Sogamoso",
+            "url": "sogamoso-boyaca"
+        },
+        {
+            "name": "Bucaramanga",
+            "url": "bucaramanga-santander"
+        }
+    ]
+}

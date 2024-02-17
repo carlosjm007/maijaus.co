@@ -13,7 +13,6 @@
   left: 0;
   right: 0;
   bottom: 5px;
-  height: 120px;
   background-color: #000000b0;
   color: rgb(224, 224, 224);
   padding: 0;
@@ -30,6 +29,12 @@
   font-size: 12px;
 }
 
+.infoCard label{
+  margin-bottom: 3px;
+  padding: 0;
+  font-size: 12px;
+}
+
 .infoCard h1{
   font-size: medium;
   margin-bottom: 5px;
@@ -38,6 +43,12 @@
 .infoCard a{
   color: cornflowerblue;
   text-decoration: none;
+}
+
+.citySelector{
+  margin-bottom: 3px;
+  padding: 0;
+  font-size: 12px;
 }
 
 /* Enable hover only on non-touch devices */
