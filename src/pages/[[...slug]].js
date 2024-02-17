@@ -6,19 +6,21 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const SPECTS_LOCATION_LINK = "https://maijaus.z20.web.core.windows.net";
 
-Number.prototype.toFixedDown = function(digits) {
-  const expDigits = Math.pow(10, digits);
-  const val = this.valueOf() * expDigits;
-  return Math[val < 0 ? 'ceil' : 'floor'](val) / expDigits;
+const getFile = async (url) => {
+  const res = await fetch(url);
+  const data = await res.json();
+  return data;
 };
 
 export async function getStaticProps({params}) {
   const CITY = params.slug?.[0] || "villavicencio";
-  let res = await fetch(`${SPECTS_LOCATION_LINK}/${CITY}/venta.json`);
-  const venta = await res.json();
-  res = await fetch(`${SPECTS_LOCATION_LINK}/${CITY}/spects.json`);
-  const spects = await res.json();
+  const venta = await getFile(`${SPECTS_LOCATION_LINK}/${CITY}/venta.json`);
+  const spects = await getFile(`${SPECTS_LOCATION_LINK}/${CITY}/spects.json`);
+  let arriendo = null;
 
+  if(spects?.hasRent){
+    arriendo = await getFile(`${SPECTS_LOCATION_LINK}/${CITY}/arriendo.json`);
+  }
 
   const AREA_SELECTED = {
     minLat: spects.minLat,
@@ -32,117 +34,51 @@ export async function getStaticProps({params}) {
     lng: (AREA_SELECTED.maxLng - AREA_SELECTED.minLng) / spects.step,
   };
 
-  const dataVenta = venta.filter((item) => {
-    if (item?.price === 0) return false;
+  // import dinamically dataToGridMap
+  const { dataToGridMap, mergeArriendoIntoVentas } = await import('@/process/dataToGridMap');
+  
+  const {
+    matriz_final: matriz_final_venta, 
+    maxCost: maxVenta,
+    minCost: minVenta
+  } = dataToGridMap(venta, spects, AREA_SELECTED, STEPS);
 
-    if (item?.area === 0) return false;
-
-    if (item?.lat === 0) return false;
-    if (item?.lat > AREA_SELECTED.maxLat) return false;
-    if (item?.lat < AREA_SELECTED.minLat) return false;
-    if (item?.lng === 0) return false;
-    if (item?.lng < AREA_SELECTED.minLng) return false;
-    if (item?.lng > AREA_SELECTED.maxLng) return false;
-    return true;
-  });
-  console.log("dataVenta", dataVenta.length);
-
-  // get max and min price
-  let maxVenta = dataVenta.reduce((max, p) => (p.price/p.area) > max ? (p.price/p.area) : max, (venta[0].price/(venta[0].area)));
-  let minVenta = dataVenta.reduce((min, p) => (p.price/p.area) < min ? (p.price/p.area) : min, (venta[0].price/(venta[0].area)));
-  console.log("maxVenta", maxVenta, "minVenta", minVenta);
-
-
-  let maxLng = dataVenta.reduce((max, p) => p.lng > max ? p.lng : max, venta[0].lng);
-  let minLng = dataVenta.reduce((min, p) => p.lng < min ? p.lng : min, venta[0].lng);
-  let centerLng = (maxLng + minLng) / 2;
-  console.log("maxLng", maxLng, "minLng", minLng);
-
-
-  let maxLat = dataVenta.reduce((max, p) => p.lat > max ? p.lat : max, venta[0].lat);
-  let minLat = dataVenta.reduce((min, p) => p.lat < min ? p.lat : min, venta[0].lat);
-  let centerLat = (maxLat + minLat) / 2;
-  console.log("maxLat", maxLat, "minLat", minLat);
-
-  const MATRIZ_VENTAS = [];
-
-  for (let i = AREA_SELECTED.minLat; i < AREA_SELECTED.maxLat; i = i + STEPS.lat) {
-    for(let j = AREA_SELECTED.minLng; j < AREA_SELECTED.maxLng; j = j + STEPS.lng){
-      MATRIZ_VENTAS.push({
-        lat: i,
-        lng: j,
-        c: [],
-      });
+  const getDataArriendo = () => {
+    if(arriendo){
+      return dataToGridMap(arriendo, spects, AREA_SELECTED, STEPS);
+    }
+    return {
+      matriz_final: null, 
+      maxCost: null,
+      minCost: null
     }
   }
 
-  let allVentas = [];
-  dataVenta.forEach((item) => {
-    allVentas.push(item.price / item.area);
-  });
-  // removing 3 quartiles
-  allVentas = allVentas.sort((a, b) => a - b);
-  allVentas = allVentas.slice(0, Math.floor(allVentas.length * 0.9));
-  allVentas = allVentas.slice(Math.floor(allVentas.length * 0.1), allVentas.length);
-  // get max and min price
-  maxVenta = allVentas.reduce((max, p) => p > max ? p : max, allVentas[0]);
-  minVenta = allVentas.reduce((min, p) => p < min ? p : min, allVentas[0]);
-
-  dataVenta.forEach((item) => {
-    const celda = MATRIZ_VENTAS.find((matriz) => {
-      if (!(item.lat > matriz.lat && item.lat < matriz.lat + STEPS.lat)) {
-        return false;
-      }
-      if (!(item.lng > matriz.lng && item.lng < matriz.lng + STEPS.lng)) {
-        return false;
-      }
-      return true;
-    });
-    if (!celda) return;
-    const meter_price = item.price / item.area;
-    if(meter_price > maxVenta) return;
-    if(meter_price < minVenta) return;
-    celda.c.push(meter_price);
-  });
-
-  let matriz_final = MATRIZ_VENTAS.filter((item) => item.c.length > 0).map((item) => {
-    const mean = item.c.reduce((a, b) => a + b, 0) / item.c.length;
-    return {
-      l: [item.lat.toFixedDown(5), item.lng.toFixedDown(5)],
-      c: mean,
+  const getMergedData = () => {
+    if(arriendo){
+      return mergeArriendoIntoVentas(matriz_final_venta, matriz_final_arriendo);
     }
-  });
+    return matriz_final_venta;
+  }
 
-  //get max and min price
-  let maxPrice = matriz_final.reduce((max, p) => p.c > max ? p.c : max, matriz_final[0].c);
-  let minPrice = matriz_final.reduce((min, p) => p.c < min ? p.c : min, matriz_final[0].c);
-  console.log("maxPrice", maxPrice, "minPrice", minPrice);
+  const {
+    matriz_final: matriz_final_arriendo
+  } = getDataArriendo();
 
-  const M = spects.highQuantile/(maxPrice - minPrice);
-  const B = spects.lowQuantile - (spects.highQuantile/(maxPrice - minPrice)*minPrice);
-  matriz_final = matriz_final.map((item) => {
-    const normalized = M*item.c + B;
-    return {
-      ...item,
-      mean: (item.c/1000000).toFixedDown(1),
-      c: normalized.toFixedDown(2),
-    }
-  });
 
+  const matriz_final = getMergedData(matriz_final_venta, matriz_final_arriendo);
+
+  console.log("matriz_final", matriz_final);
 
   return {
     props: {
       venta:{
         maxVenta,
-        minVenta,
-        maxLng,
-        minLng,
-        maxLat,
-        minLat
+        minVenta
       },
       center: spects.center,
       zoom: spects.zoom,
-      matriz_final,
+      matriz_final: matriz_final,
       steps: STEPS,
       name: spects.name,
       propertiesCount: venta.length,
@@ -178,7 +114,7 @@ export async function getStaticPaths() {
   return {paths, fallback: false};
 }
 
-const Home = ({venta, center, matriz_final, steps, zoom, name, propertiesCount, ogImage}) => {
+const Home = ({center, matriz_final, steps, zoom, name, propertiesCount, ogImage}) => {
 
   const markerRef = useRef(null);
   const [popupInfo, setPopupInfo] = useState({
@@ -314,13 +250,19 @@ const Home = ({venta, center, matriz_final, steps, zoom, name, propertiesCount, 
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             {
               matriz_final.map((item, index) => {
-                const {l: [lat, lng], c, mean} = item;
-                const events = rectangleEvents(lat, lng, steps, mean);
+                const {l: [lat, lng], c, mean, arriendo} = item;
+                const events = rectangleEvents(lat, lng, steps, mean, arriendo);
                 return (
                   <Rectangle
                     key={index}
                     bounds={[[lat, lng], [lat + steps.lat, lng + steps.lng]]}
-                    pathOptions={{ color: 'red', fillOpacity: c, "weight": 0.5}}
+                    pathOptions={{
+                      color: arriendo ? 'purple' : "red",
+                      fillOpacity: c,
+                      weight: arriendo ? 2.5 : 0,
+                      fillColor: 'red',
+                      zIndex: arriendo ? 1 : 0,
+                    }}
                     eventHandlers={events}
                   />
                 )
@@ -328,8 +270,15 @@ const Home = ({venta, center, matriz_final, steps, zoom, name, propertiesCount, 
             }
             {popupInfo.visible && popupInfo.center && (
                 <Popup position={popupInfo.center}>
-                    <strong>Costo por metro cuadrado:</strong>
-                    <p><strong>{popupInfo.price}</strong> millones COP</p>
+                    <h3>Reporte del metro cuadrado</h3>
+
+                    {popupInfo.price && (
+                      <p>Costo: <strong>{popupInfo.price}</strong>M &#36; / &#13217;</p>
+                    )}
+                    {popupInfo.arriendo && (
+                      <p>Arriendo: <strong>{popupInfo.arriendo}</strong> mil 	&#36; / &#13217; mensual</p>
+                    )}
+                    <span style={{fontSize: "smaller", fontWeight: "bold"}}>Estos son datos promedio</span>
                 </Popup>)
             }
             {markerCenter.visible && markerCenter.center && (

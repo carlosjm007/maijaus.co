@@ -47,6 +47,7 @@ const MapTouch = ({popupInfo, setPopupInfo, markerCenter, setMarkerCenter, marke
             visible: true,
             center: [zone.l[0] + steps.lat, zone.l[1] + steps.lng/2],
             price: zone.mean,
+            arriendo: zone.arriendo,
         });
         setMarkerCenterVisible(false);
     }

@@ -11,7 +11,7 @@ const MapMouse = ({ popupInfo, setPopupInfo, setIntructivePopup }) => {
         });
     };
 
-    const rectangleEvents = (lat, lng, steps, mean)=>{
+    const rectangleEvents = (lat, lng, steps, mean, arriendo)=>{
         return ({
             mouseover: (e) => {
                 setIntructivePopup(false);
@@ -19,6 +19,7 @@ const MapMouse = ({ popupInfo, setPopupInfo, setIntructivePopup }) => {
                     visible: true,
                     center: [lat + steps.lat/2, lng + steps.lng/2],
                     price: mean,
+                    arriendo,
                 });
             },
             mouseout: (e) => {
