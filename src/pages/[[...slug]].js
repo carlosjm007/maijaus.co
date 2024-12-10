@@ -3,6 +3,7 @@ import styles from '@/styles/Home.module.css';
 import Map from '@components/Map';
 import Layout from '@components/Layout';
 import React, { useState, useEffect, useRef } from 'react';
+import Legend from '@/components/Legend';
 
 const SPECTS_LOCATION_LINK = "https://maijaus.z20.web.core.windows.net";
 
@@ -82,7 +83,8 @@ export async function getStaticProps({params}) {
       name: spects.name,
       propertiesCount: venta.length,
       ogImage: spects?.ogImage ? `${SPECTS_LOCATION_LINK}/${CITY}/${spects?.ogImage}` : null,
-      allCities: cities?.cities
+      allCities: cities?.cities,
+      url: CITY
     }
   }
 }
@@ -109,7 +111,7 @@ export async function getStaticPaths() {
   return {paths, fallback: false};
 }
 
-const Home = ({center, matriz_final, steps, zoom, name, propertiesCount, ogImage, allCities }) => {
+const Home = ({center, matriz_final, steps, zoom, name, propertiesCount, ogImage, allCities, url }) => {
 
   const markerRef = useRef(null);
   const [popupInfo, setPopupInfo] = useState({
@@ -171,7 +173,7 @@ const Home = ({center, matriz_final, steps, zoom, name, propertiesCount, ogImage
         <meta name='robots' content='index, follow' />
         <meta name="twitter:site" content="@carlosjm5" />
         <meta name="twitter:creator" content="@carlosjm5" />
-        <meta property="og:url" content="https://maijaus.co" />
+        <meta property="og:url" content={`https://maijaus.co/${url}`} />
         <meta property="og:type" content="website" />
         <meta property="og:title" content={`${name} - Vea su mapa inmoviliario`} />
         <meta property="og:description" content={`Descubre el panorama inmobiliario de ${name} con nuestro mapa interactivo. Visualiza de manera sencilla y clara los precios del metro cuadrado en cada zona.`} />
@@ -293,6 +295,9 @@ const Home = ({center, matriz_final, steps, zoom, name, propertiesCount, ogImage
           </>
         )}
       </Map>
+      <div>
+        <Legend/>
+      </div>
       <div className={styles.infoCard}>
         <h1>Visualiza los Costos por Metro Cuadrado</h1>
         <p>Fueron analizadas cerca de {propertiesCount} propiedades en {name}.</p>

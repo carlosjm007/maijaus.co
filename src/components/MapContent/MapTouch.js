@@ -62,6 +62,7 @@ const MapTouch = ({popupInfo, setPopupInfo, markerCenter, setMarkerCenter, marke
             // },
             moveend: () => {
                 const center = map.getCenter();
+                // console.log("moveend", center);
                 selectZone(center);
             },
             movestart: () => {
